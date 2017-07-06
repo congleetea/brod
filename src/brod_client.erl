@@ -137,20 +137,16 @@ stop(Client) ->
 get_producer(Client, Topic, Partition) ->
   case get_partition_worker(Client, ?PRODUCER_KEY(Topic, Partition)) of
     {ok, Pid} ->
-      io:format("~n~p:~p:3, getpid Topic=~p, Partition=~p~n", [?MODULE, ?LINE, Topic, Partition]),
       {ok, Pid};
     {error, {producer_not_found, Topic}} = Error ->
-      io:format("~n~p:~p:3.1, producer_not_found Topic=~p, Partition=~p~n", [?MODULE, ?LINE, Topic, Partition]),
       %% try to start a producer for the given topic if
       %% auto_start_producers option is enabled for the client
       maybe_start_producer(Client, Topic, Partition, Error);
     {error, {producer_not_found, Topic, Partition}} = Error ->
-      io:format("~n~p:~p:3.2, producer_not_found Topic=~p, Partition=~p~n", [?MODULE, ?LINE, Topic, Partition]),
       %% try to start a producer for the given topic if
       %% auto_start_producers option is enabled for the client
       maybe_start_producer(Client, Topic, Partition, Error);
     Error ->
-      io:format("~n~p:~p:3, error Topic=~p, Partition=~p, Error=~p.~n", [?MODULE, ?LINE, Topic, Partition, Error]),
       Error
   end.
 
@@ -462,7 +458,6 @@ get_partition_worker(ClientId, Key) when is_atom(ClientId) ->
 -spec lookup_partition_worker(client(), ets:tab(), partition_worker_key()) ->
         {ok, pid()} | { error, get_worker_error()}.
 lookup_partition_worker(Client, Ets, Key) ->
-  io:format("~n~p:~p:5, Client=~p, Ets=~p, Key=~p~n", [?MODULE, ?LINE, Client, Ets, Key]),
   try ets:lookup(Ets, Key) of
     [] ->
       %% not yet registered, 2 possible reasons:
@@ -783,16 +778,12 @@ do_get_partitions_count(TopicMetadata) ->
 -spec maybe_start_producer(client(), topic(), partition(), {error, any()}) ->
         ok | {error, any()}.
 maybe_start_producer(Client, Topic, Partition, Error) ->
-  io:format("~n~p:~p:3.5, Topic=~p, Partition=~p~n", [?MODULE, ?LINE, Topic, Partition]),
   case safe_gen_call(Client, {auto_start_producer, Topic}, infinity) of
     ok ->
-      io:format("~n~p:~p:4, Topic=~p, Partition=~p~n", [?MODULE, ?LINE, Topic, Partition]),
       get_partition_worker(Client, ?PRODUCER_KEY(Topic, Partition));
     {error, disabled} ->
-      io:format("~n~p:~p:4, Topic=~p, Partition=~p~n", [?MODULE, ?LINE, Topic, Partition]),
       Error;
     {error, Reason} ->
-      io:format("~n~p:~p:4, Topic=~p, Partition=~p~n", [?MODULE, ?LINE, Topic, Partition]),
       {error, Reason}
   end.
 

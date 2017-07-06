@@ -77,12 +77,10 @@ stop_producer(SupPid, TopicName) ->
 find_producer(Client, SupPid, Topic, Partition) ->
   case supervisor3:find_child(SupPid, Topic) of
     [] ->
-      io:format("~n~p:~p:6, Topic=~p~n", [?MODULE, ?LINE, Topic]),
       %% no such topic worker started,
       %% check sys.config or brod:start_link_client args
       {error, {producer_not_found, Topic}};
     [PartitionsSupPid] ->
-      io:format("~n~p:~p:PartitionsSupPid=~p~n", [?MODULE, ?LINE, PartitionsSupPid]),
       try
         case supervisor3:find_child(PartitionsSupPid, Partition) of
           [] ->
