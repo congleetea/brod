@@ -126,7 +126,8 @@ stop() ->
   application:stop(brod).
 
 %% @doc Application behaviour callback
-start(_StartType, _StartArgs) -> brod_sup:start_link().
+start(_StartType, StartArgs) ->
+  brod_sup:start_link().
 
 %% @doc Application behaviour callback
 stop(_State) -> ok.
@@ -268,6 +269,7 @@ get_consumer(Client, Topic, Partition) ->
                        | {producer_not_found, topic()}
                        | {producer_not_found, topic(), partition()}.
 get_producer(Client, Topic, Partition) ->
+  io:format("~n~p:~p:2, Topic=~p, Partition=~p~n", [?MODULE, ?LINE, Topic, Partition]),
   brod_client:get_producer(Client, Topic, Partition).
 
 %% @equiv produce(Pid, 0, <<>>, Value)
@@ -296,6 +298,7 @@ produce(ProducerPid, Key, Value) ->
 -spec produce(client(), topic(), partition() | brod_partition_fun(),
               key(), value()) -> {ok, brod_call_ref()} | {error, any()}.
 produce(Client, Topic, PartFun, Key, Value) when is_function(PartFun) ->
+  io:format("~n~p:~p:1, Topic=~p~n", [?MODULE, ?LINE, Topic]),
   case brod_client:get_partitions_count(Client, Topic) of
     {ok, PartitionsCnt} ->
       {ok, Partition} = PartFun(Topic, PartitionsCnt, Key, Value),
@@ -304,6 +307,7 @@ produce(Client, Topic, PartFun, Key, Value) when is_function(PartFun) ->
       {error, Reason}
   end;
 produce(Client, Topic, Partition, Key, Value) when is_integer(Partition) ->
+  io:format("~n~p:~p:1, Topic=~p, Partition=~p~n", [?MODULE, ?LINE, Topic, Partition]),
   case get_producer(Client, Topic, Partition) of
     {ok, Pid}       -> produce(Pid, Key, Value);
     {error, Reason} -> {error, Reason}

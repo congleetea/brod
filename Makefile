@@ -6,8 +6,8 @@ DEPS = supervisor3 kafka_protocol
 TEST_DEPS = docopt jsone meck proper
 REL_DEPS = docopt jsone
 
-ERLC_OPTS = -Werror +warn_unused_vars +warn_shadow_vars +warn_unused_import +warn_obsolete_guard +debug_info
-TEST_ERLC_OPTS = -Werror +warn_unused_vars +warn_shadow_vars +warn_unused_import +warn_obsolete_guard +debug_info
+# ERLC_OPTS = -Werror +warn_unused_vars +warn_shadow_vars +warn_unused_import +warn_obsolete_guard +debug_info
+# TEST_ERLC_OPTS = -Werror +warn_unused_vars +warn_shadow_vars +warn_unused_import +warn_obsolete_guard +debug_info
 
 dep_supervisor3_commit = 1.1.5
 dep_kafka_protocol_commit = 0.9.2

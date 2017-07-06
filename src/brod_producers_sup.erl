@@ -27,7 +27,8 @@
 -export([ init/1
         , post_init/1
         , start_link/0
-        , find_producer/3
+        %% , find_producer/3
+        , find_producer/4
         , start_producer/4
         , stop_producer/2
         ]).
@@ -68,23 +69,27 @@ stop_producer(SupPid, TopicName) ->
   supervisor3:terminate_child(SupPid, TopicName).
 
 %% @doc Find a brod_producer process pid running under ?PARTITIONS_SUP.
--spec find_producer(pid(), topic(), partition()) ->
+-spec find_producer(client(), pid(), topic(), partition()) ->
                        {ok, pid()} | {error, Reason} when
         Reason :: {producer_not_found, topic()}
                 | {producer_not_found, topic(), partition()}
                 | {producer_down, noproc}.
-find_producer(SupPid, Topic, Partition) ->
+find_producer(Client, SupPid, Topic, Partition) ->
   case supervisor3:find_child(SupPid, Topic) of
     [] ->
+      io:format("~n~p:~p:6, Topic=~p~n", [?MODULE, ?LINE, Topic]),
       %% no such topic worker started,
       %% check sys.config or brod:start_link_client args
       {error, {producer_not_found, Topic}};
     [PartitionsSupPid] ->
+      io:format("~n~p:~p:PartitionsSupPid=~p~n", [?MODULE, ?LINE, PartitionsSupPid]),
       try
         case supervisor3:find_child(PartitionsSupPid, Partition) of
           [] ->
             %% no such partition?
-            {error, {producer_not_found, Topic, Partition}};
+            %% {error, {producer_not_found, Topic, Partition}};
+            PartitionSpec = producer_spec(whereis(Client), Topic, Partition, []),
+            supervisor3:start_child(PartitionsSupPid, PartitionSpec);
           [Pid] ->
             {ok, Pid}
         end
