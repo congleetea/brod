@@ -85,3 +85,6 @@
 %%% allout-layout: t
 %%% erlang-indent-level: 2
 %%% End:
+
+%%% added by MOLMC
+-define(UPDATE_METADATA_INTERVAL, 20000). %% update metadata every 20s.

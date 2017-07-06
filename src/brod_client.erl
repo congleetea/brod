@@ -107,6 +107,7 @@
         , consumers_sup        :: pid()
         , config               :: client_config()
         , workers_tab          :: ets:tab()
+        , update_meta_timer    :: reference()
         }).
 
 %%%_* APIs =====================================================================
@@ -326,6 +327,11 @@ handle_info({'EXIT', Pid, Reason},
 handle_info({'EXIT', Pid, Reason}, State) ->
   {ok, NewState} = handle_socket_down(State, Pid, Reason),
   {noreply, NewState};
+handle_info({update_metadata, Topic}, State = #state{update_meta_timer=OldTimer}) ->
+  erlang:cancel_timer(OldTimer),
+  {_Result, NewState} = do_get_metadata(Topic, State),
+  UpdateMetaTimer = erlang:send_after(?UPDATE_METADATA_INTERVAL, self(), {update_metadata, Topic}),
+  {noreply, NewState#state{update_meta_timer=UpdateMetaTimer}};
 handle_info(Info, State) ->
   error_logger:warning_msg("~p [~p] ~p got unexpected info: ~p",
                           [?MODULE, self(), State#state.client_id, Info]),
@@ -383,7 +389,8 @@ handle_call(get_consumers_sup_pid, _From, State) ->
   {reply, {ok, State#state.consumers_sup}, State};
 handle_call({get_metadata, Topic}, _From, State) ->
   {Result, NewState} = do_get_metadata(Topic, State),
-  {reply, Result, NewState};
+  UpdateMetaTimer = erlang:send_after(?UPDATE_METADATA_INTERVAL, self(), {update_metadata, Topic}),
+  {reply, Result, NewState#state{update_meta_timer = UpdateMetaTimer}};
 handle_call({get_connection, Host, Port}, _From, State) ->
   {NewState, Result} = do_get_connection(State, Host, Port),
   {reply, Result, NewState};
